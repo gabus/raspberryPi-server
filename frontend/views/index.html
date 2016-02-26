@@ -8,6 +8,13 @@
 </head>
 <body>
 <h2>Temperature for the last 8 hours</h2>
+<select name="time-range" id="time-range">
+    <option selected value="12h">Last 12 hours</option>
+    <option value="24h">Last 24 hours</option>
+    <option value="2d">Last 2 days</option>
+    <option value="5d">Last 5 days</option>
+    <option value="1w">Entire week</option>
+</select>
 <button id="refresh">Refresh</button>
 <br/>
 
@@ -16,18 +23,40 @@
 
 </body>
 <script>
-    $(function () {
-        getStats();
-    });
-
-    $('#refresh').click(function() {
-        getStats();
-    });
+    $(function ()
+    { generateReq(); });
+    $('#time-range').change(function() { generateReq(); });
+    $('#refresh').click(function() { generateReq(); });
 
 
-    function getStats() {
-        since = '2016-01-24';
-        until = '2016-06-01';
+    function generateReq() {
+        var since = calculateTime($('#time-range').val());
+        getStats(since, new Date().getTime());
+    }
+
+
+    function calculateTime(dateString) {
+        var currentDate = new Date();
+        switch (dateString) {
+            case '12h':
+                return currentDate.setDate(currentDate.getHours() - 12);
+            case '24h':
+                return currentDate.setDate(currentDate.getHours() - 24);
+            case '2d':
+                return currentDate.setDate(currentDate.getDay() - 2);
+            case '5d':
+                return currentDate.setDate(currentDate.getDay() - 5);
+            case '1w':
+                return currentDate.setDate(currentDate.getDay() - 7);
+            default:
+                console.log('no such day available');
+                break;
+        }
+        return new Date(dateString).getTime();
+    }
+
+
+    function getStats(since, until) {
         $.ajax({
             url: 'http://52.50.54.31:3000?since='+since+'&until='+until,
             methor: 'GET',
