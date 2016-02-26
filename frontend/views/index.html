@@ -8,19 +8,35 @@
 </head>
 <body>
 <h2>Temperature for the last 8 hours</h2>
+<button id="refresh">Refresh</button>
 <br/>
 
 <canvas id="myChart" width="1700" height="600"></canvas>
 
+
 </body>
 <script>
     $(function () {
+        getStats();
+    });
+
+    $('#refresh').click(function() {
+        getStats();
+    });
+
+
+    function getStats() {
+        since = '2016-01-24';
+        until = '2016-06-01';
         $.ajax({
-            url: '/getStats',
+            url: 'http://52.50.54.31:3000?since='+since+'&until='+until,
+            methor: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
             type: 'GET',
             success: function (response) {
                 console.log(response);
-
 
                 var data = {
                     labels: response.map(function(bla) {
@@ -36,7 +52,7 @@
                             pointStrokeColor: "#fff",
                             pointHighlightFill: "#fff",
                             pointHighlightStroke: "rgba(151,187,205,1)",
-                            data: response.map(function(bla) { return bla.temperature })
+                            data: response.map(function(bla) { return (bla.temperature / 1000).toFixed(2) })
                         }
                     ]
                 };
@@ -49,6 +65,6 @@
                 console.log(err);
             }
         });
-    });
+    };
 </script>
 </html>
