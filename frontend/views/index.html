@@ -7,7 +7,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/1.0.2/Chart.min.js"></script>
 </head>
 <body>
-<h2>Temperature for the last 8 hours</h2>
+<div style="position: fixed;">
 <select name="time-range" id="time-range">
     <option selected value="12h">Last 12 hours</option>
     <option value="24h">Last 24 hours</option>
@@ -16,22 +16,27 @@
     <option value="1w">Entire week</option>
 </select>
 <button id="refresh">Refresh</button>
+</div>
 <br/>
 
-<canvas id="myChart" width="1700" height="600"></canvas>
+<canvas id="myChart" width="3600" height="400"></canvas>
 
 
 </body>
 <script>
-    $(function ()
-    { generateReq(); });
-    $('#time-range').change(function() { generateReq(); });
-    $('#refresh').click(function() { generateReq(); });
+    $(function() { generateReq(); });
+    $('#time-range').change(function() {
+        GlobalLineChartObj.destroy();
+        generateReq(); });
+    $('#refresh').click(function() {
+        GlobalLineChartObj.destroy();
+        generateReq();
+    });
 
 
     function generateReq() {
         var since = calculateTime($('#time-range').val());
-        getStats(since, new Date().getTime());
+        return getStats(since, new Date().getTime());
     }
 
 
@@ -39,9 +44,9 @@
         var currentDate = new Date();
         switch (dateString) {
             case '12h':
-                return currentDate.setDate(currentDate.getHours() - 12);
+                return currentDate.setHours(currentDate.getHours() - 12);
             case '24h':
-                return currentDate.setDate(currentDate.getHours() - 24);
+                return currentDate.setHours(currentDate.getHours() - 24);
             case '2d':
                 return currentDate.setDate(currentDate.getDay() - 2);
             case '5d':
@@ -59,18 +64,15 @@
     function getStats(since, until) {
         $.ajax({
             url: 'http://52.50.54.31:3001?since='+since+'&until='+until,
-            methor: 'GET',
+            method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
             },
-            type: 'GET',
             success: function (response) {
-                console.log(response);
-
                 var data = {
                     labels: response.map(function(bla) {
-                        var date = bla.date.slice(5, 16); // 2016-02-13T19:32:55.012Z
-                        return date.replace('T', ' ');
+                        var date = bla.date.slice(8, 16); // 2016-02-13T19:32:55.012Z
+                        return date.replace('T', 'd ');
                     }),
                     datasets: [
                         {
@@ -86,9 +88,9 @@
                     ]
                 };
 
-                var ctx = $("#myChart").get(0).getContext("2d");
-                var myNewChart = new Chart(ctx);
-                myNewChart.Line(data, {});
+                var ctx = $("#myChart").get(0).getContext('2d');
+                var ChartObj = new Chart(ctx);
+                GlobalLineChartObj = ChartObj.Line(data, {});
             },
             error: function (err) {
                 console.log(err);
