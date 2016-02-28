@@ -48,11 +48,11 @@
             case '24h':
                 return currentDate.setHours(currentDate.getHours() - 24);
             case '2d':
-                return currentDate.setDate(currentDate.getDay() - 2);
+                return currentDate.setDate(currentDate.getDate() - 2);
             case '5d':
-                return currentDate.setDate(currentDate.getDay() - 5);
+                return currentDate.setDate(currentDate.getDate() - 5);
             case '1w':
-                return currentDate.setDate(currentDate.getDay() - 7);
+                return currentDate.setDate(currentDate.getDate() - 7);
             default:
                 console.log('no such day available');
                 break;
