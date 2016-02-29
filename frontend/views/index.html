@@ -8,14 +8,14 @@
 </head>
 <body>
 <div style="position: fixed;">
-<select name="time-range" id="time-range">
-    <option selected value="12h">Last 12 hours</option>
-    <option value="24h">Last 24 hours</option>
-    <option value="2d">Last 2 days</option>
-    <option value="5d">Last 5 days</option>
-    <option value="1w">Entire week</option>
-</select>
-<button id="refresh">Refresh</button>
+    <select name="time-range" id="time-range">
+        <option selected value="12h">Last 12 hours</option>
+        <option value="24h">Last 24 hours</option>
+        <option value="2d">Last 2 days</option>
+        <option value="5d">Last 5 days</option>
+        <option value="1w">Entire week</option>
+    </select>
+    <button id="refresh">Refresh</button>
 </div>
 <br/>
 
@@ -24,11 +24,14 @@
 
 </body>
 <script>
-    $(function() { generateReq(); });
-    $('#time-range').change(function() {
+    $(function () {
+        generateReq();
+    });
+    $('#time-range').change(function () {
         GlobalLineChartObj.destroy();
-        generateReq(); });
-    $('#refresh').click(function() {
+        generateReq();
+    });
+    $('#refresh').click(function () {
         GlobalLineChartObj.destroy();
         generateReq();
     });
@@ -63,14 +66,24 @@
 
     function getStats(since, until) {
         $.ajax({
-            url: 'http://52.50.54.31:3001?since='+since+'&until='+until,
+            url: 'http://52.50.54.31:3001?since=' + since + '&until=' + until,
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
             },
             success: function (response) {
+                var daysIndex = [];
+                var dates = [];
+                response.map(function(bla, index) {
+                    var date = bla.date.slice(8, 10); // 2016-02-13T19:32:55.012Z
+                    if(dates.indexOf(date) == -1) {
+                        dates.push(date);
+                        daysIndex.push({'index': index, 'date': date});
+                    }
+                });
+
                 var data = {
-                    labels: response.map(function(bla) {
+                    labels: response.map(function (bla) {
                         var date = bla.date.slice(8, 16); // 2016-02-13T19:32:55.012Z
                         return date.replace('T', 'd ');
                     }),
@@ -83,19 +96,51 @@
                             pointStrokeColor: "#fff",
                             pointHighlightFill: "#fff",
                             pointHighlightStroke: "rgba(151,187,205,1)",
-                            data: response.map(function(bla) { return (bla.temperature / 1000).toFixed(2) })
+                            data: response.map(function (bla) {
+                                return (bla.temperature / 1000).toFixed(2)
+                            })
                         }
                     ]
                 };
 
                 var ctx = $("#myChart").get(0).getContext('2d');
+
+
+                Chart.types.Line.extend({
+                    name: "LineWithLine",
+                    draw: function () {
+                        Chart.types.Line.prototype.draw.apply(this, arguments);
+
+                        for(var i = 0; i < this.options.lineAtIndex.length; i++) {
+                            var point = this.datasets[0].points[this.options.lineAtIndex[i].index];
+                            var scale = this.scale;
+
+                            // draw line
+                            this.chart.ctx.beginPath();
+                            this.chart.ctx.moveTo(point.x, scale.startPoint + 24);
+                            this.chart.ctx.strokeStyle = '#ff0000';
+                            this.chart.ctx.lineTo(point.x, scale.endPoint);
+                            this.chart.ctx.stroke();
+
+                            // set line value
+                            this.chart.ctx.textAlign = 'center';
+                            this.chart.ctx.fillText(this.options.lineAtIndex[i].date, point.x, scale.startPoint + 12);
+                        }
+
+                    }
+                });
+
+
                 var ChartObj = new Chart(ctx);
-                GlobalLineChartObj = ChartObj.Line(data, {});
+                GlobalLineChartObj = ChartObj.LineWithLine(data, {
+//                    datasetFill : false,
+                    lineAtIndex: daysIndex
+                });
             },
             error: function (err) {
                 console.log(err);
             }
         });
-    };
+    }
 </script>
 </html>
