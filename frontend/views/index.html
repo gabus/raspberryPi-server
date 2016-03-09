@@ -6,7 +6,7 @@
     <script src="http://code.jquery.com/jquery-1.12.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/1.0.2/Chart.min.js"></script>
 </head>
-<body>
+<body style="font-family: sans-serif;">
 
 <div style="position: fixed;">
     <div style="margin: 5px;">Current temperature: <b id="currentTemp"></b></div>
@@ -76,8 +76,8 @@
             },
             success: function (response) {
                 var currentTemp = (response[response.length -1].temperature / 1000).toFixed(1);
-                $('#currentTemp').text(currentTemp);
-                $('title').text('Temp: ' + currentTemp);
+                $('#currentTemp').text(currentTemp + ' °C');
+                $('title').text(currentTemp + ' °C');
                 var daysIndex = [];
                 var dates = [];
                 response.map(function(bla, index) {
