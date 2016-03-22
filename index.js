@@ -6,7 +6,7 @@ var app = express();
 app.engine('html', mustacheExpress());          // register file extension mustache
 app.set('view engine', 'html');                 // register file extension for partials
 app.set('views', __dirname + '/frontend/views');
-//app.use(express.static(__dirname + '/public')); // set static folder
+app.use(express.static(__dirname + '/frontend')); // set static folder
 
 
 app.get('/', function (req, res) {

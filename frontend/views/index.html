@@ -5,11 +5,13 @@
     <title></title>
     <script src="http://code.jquery.com/jquery-1.12.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/1.0.2/Chart.min.js"></script>
+    <script src="./views/index.js"></script>
+    <link rel="stylesheet" href="./styles/styles.css">
 </head>
-<body style="font-family: sans-serif;">
+<body class="sans-serif">
 
-<div style="position: fixed;">
-    <div style="margin: 5px;">Current temperature: <b id="currentTemp"></b></div>
+<div class="fixed">
+    <div class="margin-5">Current temperature: <b id="currentTemp"></b></div>
 
     <select name="time-range" id="time-range">
         <option selected value="12h">Last 12 hours</option>
@@ -19,134 +21,22 @@
         <option value="1w">Entire week</option>
     </select>
     <button id="refresh">Refresh</button>
-    <br/>
 </div>
+<br/>
 
-<canvas id="myChart" width="3600" height="400" style="margin-top: 50px;"></canvas>
+<canvas id="myChart" width="3600" height="400" class="margin-top-50"></canvas>
+<br/>
 
+<table id="monthlyStats" class="fixed">
+    <thead>
+    <tr>
+        <td>Date</td>
+        <td>Average</td>
+        <td>Min</td>
+        <td>Max</td>
+    </tr>
+    </thead>
+</table>
 
 </body>
-<script>
-    $(function () {
-        generateReq();
-    });
-    $('#time-range').change(function () {
-        GlobalLineChartObj.destroy();
-        generateReq();
-    });
-    $('#refresh').click(function () {
-        GlobalLineChartObj.destroy();
-        generateReq();
-    });
-
-
-    function generateReq() {
-        var since = calculateTime($('#time-range').val());
-        return getStats(since, new Date().getTime());
-    }
-
-
-    function calculateTime(dateString) {
-        var currentDate = new Date();
-        switch (dateString) {
-            case '12h':
-                return currentDate.setHours(currentDate.getHours() - 12);
-            case '24h':
-                return currentDate.setHours(currentDate.getHours() - 24);
-            case '2d':
-                return currentDate.setDate(currentDate.getDate() - 2);
-            case '5d':
-                return currentDate.setDate(currentDate.getDate() - 5);
-            case '1w':
-                return currentDate.setDate(currentDate.getDate() - 7);
-            default:
-                console.log('no such day available');
-                break;
-        }
-        return new Date(dateString).getTime();
-    }
-
-
-    function getStats(since, until) {
-        $.ajax({
-            url: 'http://52.50.54.31:3001?since=' + since + '&until=' + until,
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            success: function (response) {
-                var currentTemp = (response[response.length -1].temperature / 1000).toFixed(1);
-                $('#currentTemp').text(currentTemp + ' °C');
-                $('title').text(currentTemp + ' °C');
-                var daysIndex = [];
-                var dates = [];
-                response.map(function(bla, index) {
-                    var date = bla.date.slice(8, 10); // 2016-02-13T19:32:55.012Z
-                    if(dates.indexOf(date) == -1) {
-                        dates.push(date);
-                        daysIndex.push({'index': index, 'date': date});
-                    }
-                });
-
-                var data = {
-                    labels: response.map(function (bla) {
-                        var date = bla.date.slice(8, 16); // 2016-02-13T19:32:55.012Z
-                        return date.replace('T', 'd ');
-                    }),
-                    datasets: [
-                        {
-                            label: "Room temperature",
-                            fillColor: "rgba(151,187,205,0.2)",
-                            strokeColor: "rgba(151,187,205,1)",
-                            pointColor: "rgba(151,187,205,1)",
-                            pointStrokeColor: "#fff",
-                            pointHighlightFill: "#fff",
-                            pointHighlightStroke: "rgba(151,187,205,1)",
-                            data: response.map(function (bla) {
-                                return (bla.temperature / 1000).toFixed(2)
-                            })
-                        }
-                    ]
-                };
-
-                var ctx = $("#myChart").get(0).getContext('2d');
-
-
-                Chart.types.Line.extend({
-                    name: "LineWithLine",
-                    draw: function () {
-                        Chart.types.Line.prototype.draw.apply(this, arguments);
-
-                        for(var i = 0; i < this.options.lineAtIndex.length; i++) {
-                            var point = this.datasets[0].points[this.options.lineAtIndex[i].index];
-                            var scale = this.scale;
-
-                            // draw line
-                            this.chart.ctx.beginPath();
-                            this.chart.ctx.moveTo(point.x, scale.startPoint + 24);
-                            this.chart.ctx.strokeStyle = '#ff0000';
-                            this.chart.ctx.lineTo(point.x, scale.endPoint);
-                            this.chart.ctx.stroke();
-
-                            // set line value
-                            this.chart.ctx.textAlign = 'center';
-                            this.chart.ctx.fillText(this.options.lineAtIndex[i].date, point.x, scale.startPoint + 12);
-                        }
-
-                    }
-                });
-
-
-                var ChartObj = new Chart(ctx);
-                GlobalLineChartObj = ChartObj.LineWithLine(data, {
-//                    datasetFill : false,
-                    lineAtIndex: daysIndex
-                });
-            },
-            error: function (err) {
-                console.log(err);
-            }
-        });
-    }
-</script>
 </html>
