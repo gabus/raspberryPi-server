@@ -21,12 +21,16 @@ function generateReq() {
 function calculateTime(dateString) {
   var currentDate = new Date();
   switch (dateString) {
+    case '5h':
+      return currentDate.setHours(currentDate.getHours() - 5);
     case '12h':
       return currentDate.setHours(currentDate.getHours() - 12);
     case '24h':
       return currentDate.setHours(currentDate.getHours() - 24);
     case '2d':
       return currentDate.setDate(currentDate.getDate() - 2);
+    case '3d':
+      return currentDate.setDate(currentDate.getDate() - 3);
     case '5d':
       return currentDate.setDate(currentDate.getDate() - 5);
     case '1w':
@@ -123,15 +127,9 @@ function getStats(since, until) {
 
 
 function getTotals() {
-  var since = new Date();
-  since.setMonth(since.getMonth() - 5);
-  var until = new Date().getTime();
   $.ajax({
     url: 'http://52.50.54.31:3001/getTotals',
     method: 'GET',
-    headers: {
-      'Content-Type': 'application/json'
-    },
     success: function(data) {
       var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
       data.map(function(oneData) {
