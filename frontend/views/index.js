@@ -114,6 +114,7 @@ function getStats(since, until) {
 
 
       var ChartObj = new Chart(ctx);
+      Chart.defaults.global.animation = false;
       GlobalLineChartObj = ChartObj.LineWithLine(data, {
 //                    datasetFill : false,
         lineAtIndex: daysIndex
